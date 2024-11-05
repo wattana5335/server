@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String?
+  name      String?
+  picture   String?
+  role      String   @default("user")
+  enabled   Boolean  @default(true)
+  address   String?
+  orders    Order[]
+  carts     Cart[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String           @id @default(uuid())
+  title       String
+  description String
+  price       Int
+  sold        Int              @default(0)
+  quantity    Int
+  orderItems  ProductOnOrder[]
+  cartItems   ProductOnCart[]
+  images      Image[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  category    Category?        @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+}
+
+model Order {
+  id          String           @id @default(uuid())
+  products    ProductOnOrder[]
+  cartTotal   Int
+  orderStatus String           @default("Not Process")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  orderedBy   User             @relation(fields: [orderedById], references: [id])
+  orderedById String
+}
+
+model ProductOnOrder {
+  id        String  @id @default(uuid())
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  count     Int
+  price     Int
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Cart {
+  id          String          @id @default(uuid())
+  products    ProductOnCart[]
+  cartTotal   Int
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  orderedBy   User            @relation(fields: [orderedById], references: [id])
+  orderedById String
+}
+
+model ProductOnCart {
+  id        String  @id @default(uuid())
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cartId    String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  count     Int
+  price     Int
+}
+
+model Image {
+  id        String   @id @default(uuid())
+  publicId  String
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+}
